@@ -1,6 +1,9 @@
 package com.github.fabiojose;
 
 import java.util.Arrays;
+import java.util.Optional;
+
+import com.github.fabiojose.service.LogService;
 
 /**
  * Application entry-point
@@ -10,15 +13,35 @@ import java.util.Arrays;
  */
 public class App {
 	
+	private static final String ARG_SEPARATOR = "=";
 	private static final String FILE_PATH_ARG = "--file=";
 	
     public static void main( String[] args ) throws Exception {
 
-    	Arrays.asList(args).stream()
+    	String filePathArg = 
+    	  Arrays.asList(args).stream()
     		.filter(arg -> arg.startsWith(FILE_PATH_ARG))
+    		.filter(arg -> !arg.equals(FILE_PATH_ARG))
     		.findFirst()
     		.orElseThrow(() ->
     			new IllegalArgumentException(
     				String.format("Argument %s not found", FILE_PATH_ARG)));
+    	
+    	Optional<String> filePathOptional = 
+	    	Optional.ofNullable(
+		    	Arrays.asList(filePathArg.split(ARG_SEPARATOR)).stream()
+		    		.reduce((name, value) -> value)
+		    		.orElse(null)
+	    	);
+    	
+    	String filePathName =
+    	filePathOptional.orElseThrow(() -> 
+    		new IllegalArgumentException(
+    			String.format("Argument %s has no value", FILE_PATH_ARG)));
+    	
+    	final LogService logService = new LogService();
+    	
+    	logService.load(filePathName);
+    	
     }
 }
