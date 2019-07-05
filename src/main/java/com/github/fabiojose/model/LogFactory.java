@@ -13,7 +13,7 @@ import java.util.stream.Stream;
  */
 public class LogFactory {
 /*
-23:49:08.277      038 – F.MASSA                           1		1:02.852           44,275
+23:49:08.277      038 – F.MASSA                           1 1:02.852           44,275
  */
 	
 	private static final int HORA_START_INDEX = 0;
@@ -27,6 +27,9 @@ public class LogFactory {
 	
 	private static final int TEMPO_VOLTA_START_INDEX = 61;
 	private static final int TEMPO_VOLTA_END_INDEX = 76;
+	
+	private static final int VELOCIDADE_VOLTA_START_INDEX = 80;
+	private static final int VELOCIDADE_VOLTA_END_INDEX = 86;
 	
 	static String extractField(String entry, int startIndex, int endIndex) {
 		

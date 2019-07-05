@@ -100,4 +100,20 @@ public class LogFactoryTests {
 		assertEquals(expected, actual);
 	}
 	
+	@Test
+	public void velocidade_volta_entry_ok() {
+		// setup
+		String expected = "44,275";
+		String logEntry = "23:49:08.277      038 – F.MASSA                           1		1:02.852           44,275";
+		
+		// act
+		String actual = 
+			LogFactory.extractField(logEntry,
+				80, 
+				86);
+			
+		// assert
+		assertEquals(expected, actual);
+	}
+	
 }
