@@ -30,8 +30,14 @@ public class Piloto {
 	}
 	public String getNome() {
 		return nome;
-	}	
+	}
 	
+	
+	@Override
+	public String toString() {
+		return "Piloto [codigo=" + codigo + ", nome=" + nome + "]";
+	}
+
 	/**
 	 * Parses strings with this format: {@code 038 – F.MASSA}
 	 * @param string 
