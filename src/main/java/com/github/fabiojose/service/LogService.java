@@ -4,6 +4,8 @@ import java.io.FileNotFoundException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.stream.Stream;
+
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -17,14 +19,19 @@ public class LogService {
 		requireNonNull(filePathName);
 		
 		Path filePath = Paths.get(filePathName);
-    	if(Files.isDirectory(filePath)) {
-    		throw new IllegalArgumentException(
-    			String.format("Path is not a file: %s", filePathName));
-    	}
-    	
-    	if(!filePath.toFile().exists()) {
-    		throw new FileNotFoundException(filePathName);
-    	}
+		
+		filePath = 
+			Stream.of(filePath)
+				.filter(fp -> !Files.isDirectory(fp))
+				.findFirst()
+				.orElseThrow(() -> new IllegalArgumentException(
+	    			String.format("Path is not a file: %s", filePathName)));
+
+		filePath = 
+			Stream.of(filePath)
+				.filter(fp -> fp.toFile().exists())
+				.findFirst()
+				.orElseThrow(() -> new FileNotFoundException(filePathName));
     	
 	}
 	
