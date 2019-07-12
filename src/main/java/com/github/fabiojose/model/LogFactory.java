@@ -127,7 +127,6 @@ public class LogFactory {
 			log.debug("[PARSED] Velocidade Média Volta: {}",
 					velocidadeMediaVolta);
 		}catch(ParseException e) {
-			log.error(e.getMessage(), e);
 			throw new IllegalArgumentException(e.getMessage(), e);
 		}
 		
