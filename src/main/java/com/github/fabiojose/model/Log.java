@@ -16,34 +16,27 @@ public class Log {
 	private Duration tempoVolta;
 	private float velocidadeMediaVolta;
 	
+	public Log(LocalTime hora, Piloto piloto, short volta, Duration tempoVolta,
+			float velocidadeMediaVolta) {
+		this.hora = hora;
+		this.piloto = piloto;
+		this.volta = volta;
+		this.tempoVolta = tempoVolta;
+		this.velocidadeMediaVolta = velocidadeMediaVolta;
+	}
 	public LocalTime getHora() {
 		return hora;
-	}
-	public void setHora(LocalTime hora) {
-		this.hora = hora;
 	}
 	public Piloto getPiloto() {
 		return piloto;
 	}
-	public void setPiloto(Piloto piloto) {
-		this.piloto = piloto;
-	}
 	public short getVolta() {
 		return volta;
-	}
-	public void setVolta(short volta) {
-		this.volta = volta;
 	}
 	public Duration getTempoVolta() {
 		return tempoVolta;
 	}
-	public void setTempoVolta(Duration tempoVolta) {
-		this.tempoVolta = tempoVolta;
-	}
 	public float getVelocidadeMediaVolta() {
 		return velocidadeMediaVolta;
-	}
-	public void setVelocidadeMediaVolta(float velocidadeMediaVolta) {
-		this.velocidadeMediaVolta = velocidadeMediaVolta;
 	}
 }
