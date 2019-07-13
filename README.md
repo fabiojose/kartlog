@@ -25,7 +25,7 @@ it and proceed as follow:
 
 To compile and run this solution you need:
 
-- JDK 1.8+
+- JDK 11+
 
 - Apache Maven 3.6+
 
