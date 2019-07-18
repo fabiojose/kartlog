@@ -1,10 +1,17 @@
 package com.github.fabiojose.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.FileNotFoundException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
+
+import com.github.fabiojose.model.Log;
 
 /**
  * 
@@ -12,6 +19,8 @@ import org.junit.jupiter.api.Test;
  *
  */
 public class LogServiceTests {
+	
+	private static final int FIRST_VALUE = 1;
 	
 	@Test
 	public void file_is_null_err() {
@@ -49,6 +58,59 @@ public class LogServiceTests {
 		assertThrows(FileNotFoundException.class, () -> {
 			// act
 			service.load(arg);
+		});
+	}
+	
+	@Test
+	public void file_found() throws Exception {
+		// setup
+		String arg = "./target/test-classes/input.txt";
+		LogService service = new LogService();
+		
+		// act and assert
+		service.load(arg);
+	}
+	
+	@Test
+	public void file_log_value1_piloto_ok() throws Exception {
+		// setup
+		String expectedPilotoCodigo = "038";
+		String expectedPilotoNome = "F.MASSA";
+		Path arg = Paths.get("./target/test-classes/input1.txt");
+		LogService service = new LogService();
+		
+		// act
+		Optional<Log> actual = 
+			service.valuesOf(arg)
+				.findFirst();
+		
+		// assert
+		assertTrue(actual.isPresent());
+		actual.ifPresent(log -> {
+			assertEquals(expectedPilotoNome, log.getPiloto().getNome());
+			assertEquals(expectedPilotoCodigo, log.getPiloto().getCodigo());
+		});
+	}
+	
+	@Test
+	public void file_log_value2_piloto_ok() throws Exception {
+		// setup
+		String expectedPilotoCodigo = "033";
+		String expectedPilotoNome = "R.BARRICHELLO";
+		Path arg = Paths.get("./target/test-classes/input2.txt");
+		LogService service = new LogService();
+		
+		// act
+		Optional<Log> actual = 
+			service.valuesOf(arg)
+				.skip(FIRST_VALUE)
+				.findFirst();
+		
+		// assert
+		assertTrue(actual.isPresent());
+		actual.ifPresent(log -> {
+			assertEquals(expectedPilotoNome, log.getPiloto().getNome());
+			assertEquals(expectedPilotoCodigo, log.getPiloto().getCodigo());
 		});
 	}
 	
