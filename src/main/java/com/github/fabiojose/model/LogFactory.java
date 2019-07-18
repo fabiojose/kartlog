@@ -8,7 +8,10 @@ import java.text.ParseException;
 import java.time.Duration;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Iterator;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -26,22 +29,12 @@ public class LogFactory {
 	private static final Logger log = 
 			LoggerFactory.getLogger(LogFactory.class);
 	
+	private static final int FIRST_MATCH = 1;
+	
+	private static final String LOG_REGEX = 
+			"(\\d{1,2}:\\d{1,2}:\\d{1,2}\\.\\d{1,3})\\s*(\\d{1,3}\\s*[\\–\\-]\\s*[\\w\\.]*)\\s*(\\d{1,3})\\s*(\\d{1,2}:\\d{1,2}\\.\\d{1,3})\\s*(\\d{1,2}\\,\\d{1,4})";
+	
 	private static final Locale PT_BR = new Locale("pt", "BR");
-	
-	private static final int HORA_START_INDEX = 0;
-	private static final int HORA_END_INDEX = 11;
-	
-	private static final int PILOTO_START_INDEX = 18;
-	private static final int PILOTO_END_INDEX = 57;
-	
-	private static final int VOLTA_START_INDEX = 58;
-	private static final int VOLTA_END_INDEX = 60;
-	
-	private static final int TEMPO_VOLTA_START_INDEX = 61;
-	private static final int TEMPO_VOLTA_END_INDEX = 76;
-	
-	private static final int VELOCIDADE_MEDIA_VOLTA_START_INDEX = 80;
-	private static final int VELOCIDADE_MEDIA_VOLTA_END_INDEX = 86;
 	
 	static String extractField(String entry, int startIndex, int endIndex) {
 		
@@ -54,6 +47,19 @@ public class LogFactory {
 				.map(Object::toString)
 				.collect(Collectors.joining())
 				.trim();
+	}
+	
+	static Stream<String> fieldsOf(String entry) {
+		
+		Pattern pattern = Pattern.compile(LOG_REGEX);
+		Matcher matcher = pattern.matcher(entry);
+		
+		matcher.matches();
+		
+		return
+			IntStream.range(FIRST_MATCH, matcher.groupCount() +1)
+				.mapToObj(index -> matcher.group(index))
+				.peek(match -> log.debug("Group match: >{}<", match));
 	}
 	
 	static Duration toDuration(String time) {
@@ -86,38 +92,35 @@ public class LogFactory {
 				.filter(e -> !e.isEmpty())
 				.findFirst()
 				.orElseThrow(() -> new IllegalArgumentException());
+		
+		Iterator<String> fields = fieldsOf(entry).iterator();
 	
-		String horaString = extractField(entry,
-				HORA_START_INDEX, HORA_END_INDEX);
+		
+		String horaString = fields.next();
 		log.debug("Hora: >{}<", horaString);
 		
 		LocalTime hora = LocalTime.parse(horaString);
 		log.debug("[PARSED] Hora: {}", hora);
 		
-		String pilotoString = extractField(entry,
-				PILOTO_START_INDEX, PILOTO_END_INDEX);
+		String pilotoString = fields.next();
 		log.debug("Piloto: >{}<", pilotoString);
 		
 		Piloto piloto = Piloto.fromString(pilotoString);
 		log.debug("[PARSED] Piloto: {}", piloto);
 		
-		String voltaString = extractField(entry,
-				VOLTA_START_INDEX, VOLTA_END_INDEX);
+		String voltaString = fields.next();
 		log.debug("Volta: >{}<", voltaString);
 		
 		Short volta = Short.parseShort(voltaString);
 		log.debug("[PARSED] Volta: {}", volta);
 		
-		String tempoVoltaString = extractField(entry,
-				TEMPO_VOLTA_START_INDEX, TEMPO_VOLTA_END_INDEX);
+		String tempoVoltaString = fields.next();
 		log.debug("Tempo Volta: >{}<", tempoVoltaString);
 
 		Duration tempoVolta = toDuration(tempoVoltaString);
 		log.debug("[PARSED] Tempo Volta: {}", tempoVolta);
 		
-		String velocidadeMediaVoltaString = extractField(entry,
-				VELOCIDADE_MEDIA_VOLTA_START_INDEX,
-				VELOCIDADE_MEDIA_VOLTA_END_INDEX);
+		String velocidadeMediaVoltaString = fields.next();
 		log.debug("Velocidade Média Volta: >{}<", velocidadeMediaVoltaString);
 		
 		float velocidadeMediaVolta = 0;

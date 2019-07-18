@@ -27,6 +27,7 @@ public class LogService {
 			Files.lines(filePath)
 				.skip(FIRST_LINE)
 				.map(line -> LogFactory.fromLogEntry(line));
+	
 	}
 
 	public void load(String filePathName) throws FileNotFoundException {

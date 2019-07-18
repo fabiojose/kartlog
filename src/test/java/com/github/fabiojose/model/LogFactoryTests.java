@@ -7,6 +7,7 @@ import java.text.ParseException;
 import java.time.Duration;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
 
@@ -79,10 +80,10 @@ public class LogFactoryTests {
 		String logEntry = "23:49:08.277      038 – F.MASSA                           1		1:02.852           44,275";
 		
 		// act
-		String actual = 
-			LogFactory.extractField(logEntry,
-				0, 
-				11);
+		Stream<String> fields = LogFactory.fieldsOf(logEntry);
+		String actual = fields
+			.findFirst()
+			.get();
 			
 		// assert
 		assertEquals(expected, actual);
@@ -91,7 +92,7 @@ public class LogFactoryTests {
 	@Test
 	public void hora_entry_parse_err() {
 		// setup
-		String logEntry = "23K49K08@277      038 – F.MASSA                           1		1:02.852           44,275";
+		String logEntry = "32:49:08.277      038 – F.MASSA                           1		1:02.852           44,275";
 		
 		// assert
 		assertThrows(DateTimeParseException.class, () -> {
@@ -120,11 +121,12 @@ public class LogFactoryTests {
 		String logEntry = "23:49:08.277      038 – F.MASSA                           1		1:02.852           44,275";
 		
 		// act
-		String actual = 
-			LogFactory.extractField(logEntry,
-				18, 
-				57);
-			
+		Stream<String> fields = LogFactory.fieldsOf(logEntry);
+		String actual = fields
+			.skip(1)
+			.findFirst()
+			.get();
+
 		// assert
 		assertEquals(expected, actual);
 	}
@@ -150,10 +152,11 @@ public class LogFactoryTests {
 		String logEntry = "23:49:08.277      038 – F.MASSA                           1		1:02.852           44,275";
 		
 		// act
-		String actual = 
-			LogFactory.extractField(logEntry,
-				58, 
-				60);
+		Stream<String> fields = LogFactory.fieldsOf(logEntry);
+		String actual = fields
+			.skip(2)
+			.findFirst()
+			.get();
 			
 		// assert
 		assertEquals(expected, actual);
@@ -165,7 +168,7 @@ public class LogFactoryTests {
 		String logEntry = "23:49:08.277      038 – F.MASSA                           $		1:02.852           44,275";
 		
 		// assert
-		assertThrows(NumberFormatException.class, () -> {
+		assertThrows(IllegalStateException.class, () -> {
 			// act
 			LogFactory.fromLogEntry(logEntry);
 		});
@@ -193,11 +196,12 @@ public class LogFactoryTests {
 		String logEntry = "23:49:08.277      038 – F.MASSA                           1		1:02.852           44,275";
 		
 		// act
-		String actual = 
-			LogFactory.extractField(logEntry,
-				61, 
-				76);
-			
+		Stream<String> fields = LogFactory.fieldsOf(logEntry);
+		String actual = fields
+			.skip(3)
+			.findFirst()
+			.get();
+
 		// assert
 		assertEquals(expected, actual);
 	}
@@ -208,7 +212,7 @@ public class LogFactoryTests {
 		String logEntry = "23:49:08.277      038 – F.MASSA                           1		1K02@852           44,275";
 		
 		// assert
-		assertThrows(DateTimeParseException.class, () -> {
+		assertThrows(IllegalStateException.class, () -> {
 			LogFactory.fromLogEntry(logEntry);
 		});
 	}
@@ -233,10 +237,11 @@ public class LogFactoryTests {
 		String logEntry = "23:49:08.277      038 – F.MASSA                           1		1:02.852           44,275";
 		
 		// act
-		String actual = 
-			LogFactory.extractField(logEntry,
-				80, 
-				86);
+		Stream<String> fields = LogFactory.fieldsOf(logEntry);
+		String actual = fields
+			.skip(4)
+			.findFirst()
+			.get();
 			
 		// assert
 		assertEquals(expected, actual);
@@ -257,9 +262,18 @@ public class LogFactoryTests {
 	public void velocidade_volta_entry_parse_err() {
 		String logEntry = "23:49:08.277      038 – F.MASSA                           1		1:02.852           Y4,275";
 		
-		assertThrows(IllegalArgumentException.class, () -> {
+		assertThrows(IllegalStateException.class, () -> {
 			LogFactory.fromLogEntry(logEntry);
 		});
+	}
+	
+	@Test
+	public void log_entry_count_ok() {
+		int expected = 5;
+		String logEntry = "23:49:08.277      038 – F.MASSA               		         1		1:02.852           4,275";
 		
+		Stream<String> actual = LogFactory.fieldsOf(logEntry);
+		
+		assertEquals(expected, actual.count());
 	}
 }

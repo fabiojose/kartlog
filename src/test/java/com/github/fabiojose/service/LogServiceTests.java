@@ -21,6 +21,7 @@ import com.github.fabiojose.model.Log;
 public class LogServiceTests {
 	
 	private static final int FIRST_VALUE = 1;
+	private static final int TO_LAST = 22;
 	
 	@Test
 	public void file_is_null_err() {
@@ -111,6 +112,28 @@ public class LogServiceTests {
 		actual.ifPresent(log -> {
 			assertEquals(expectedPilotoNome, log.getPiloto().getNome());
 			assertEquals(expectedPilotoCodigo, log.getPiloto().getCodigo());
+		});
+	}
+	
+	@Test
+	public void file_log_value_last_piloto_ok() throws Exception {
+		// setup
+		Short expectedVolta = 3;
+		String expectedPilotoNome = "S.VETTEL";
+		Path arg = Paths.get("./target/test-classes/input.txt");
+		LogService service = new LogService();
+		
+		// act
+		Optional<Log> actual = 
+			service.valuesOf(arg)
+				.skip(TO_LAST)
+				.findFirst();
+		
+		// assert
+		assertTrue(actual.isPresent());
+		actual.ifPresent(log -> {
+			assertEquals(expectedPilotoNome, log.getPiloto().getNome());
+			assertEquals(expectedVolta.shortValue(), log.getVolta());
 		});
 	}
 	
