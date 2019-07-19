@@ -39,4 +39,9 @@ public class Log {
 	public float getVelocidadeMediaVolta() {
 		return velocidadeMediaVolta;
 	}
+	@Override
+	public String toString() {
+		return "Log [piloto=" + piloto + ", volta=" + volta + ", tempoVolta=" 
+					+ tempoVolta + "]";
+	}	
 }
