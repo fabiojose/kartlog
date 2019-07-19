@@ -8,10 +8,12 @@ import java.io.FileNotFoundException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
 
 import com.github.fabiojose.model.Log;
+import com.github.fabiojose.model.Ranking;
 
 /**
  * 
@@ -32,7 +34,19 @@ public class LogServiceTests {
 		// assert
 		assertThrows(NullPointerException.class, () -> {
 			// act
-			service.load(arg);
+			service.rankingOf(arg);
+		});
+	}
+	
+	@Test
+	public void output_is_null_err() {
+		// setup
+		LogService service = new LogService();
+		
+		// assert
+		assertThrows(NullPointerException.class, () -> {
+			// act
+			service.report(Stream.ofNullable(null), null);
 		});
 	}
 
@@ -45,7 +59,7 @@ public class LogServiceTests {
 		// assert
 		assertThrows(IllegalArgumentException.class, () -> {
 			// act
-			service.load(arg);
+			service.rankingOf(arg);
 		});
 	}
 	
@@ -58,7 +72,7 @@ public class LogServiceTests {
 		// assert
 		assertThrows(FileNotFoundException.class, () -> {
 			// act
-			service.load(arg);
+			service.rankingOf(arg);
 		});
 	}
 	
@@ -69,7 +83,7 @@ public class LogServiceTests {
 		LogService service = new LogService();
 		
 		// act and assert
-		service.load(arg);
+		service.rankingOf(arg);
 	}
 	
 	@Test
@@ -137,4 +151,47 @@ public class LogServiceTests {
 		});
 	}
 	
+	@Test
+	public void ganhador_duas_voltas_ok() throws Exception {
+		// setup
+		String expectedPilotoCodigo = "033";
+		String expectedPilotoNome = "R.BARRICHELLO";
+		String arg = "./target/test-classes/input2.txt";
+		LogService service = new LogService();
+		
+		// act
+		Stream<Ranking> ranking = service.rankingOf(arg);
+		Optional<Ranking> actual = 
+				ranking.findFirst();
+		
+		// assert
+		assertTrue(actual.isPresent());
+		actual.ifPresent(r -> {
+			assertEquals(expectedPilotoCodigo, r.getPiloto().getCodigo());
+			assertEquals(expectedPilotoNome, r.getPiloto().getNome());
+		});
+		
+	}
+	
+	@Test
+	public void ganhador__ok() throws Exception {
+		// setup
+		String expectedPilotoCodigo = "038";
+		String expectedPilotoNome = "F.MASSA";
+		String arg = "./target/test-classes/input.txt";
+		LogService service = new LogService();
+		
+		// act
+		Stream<Ranking> ranking = service.rankingOf(arg);
+		Optional<Ranking> actual = 
+				ranking.findFirst();
+		
+		// assert
+		assertTrue(actual.isPresent());
+		actual.ifPresent(r -> {
+			assertEquals(expectedPilotoCodigo, r.getPiloto().getCodigo());
+			assertEquals(expectedPilotoNome, r.getPiloto().getNome());
+		});
+		
+	}
 }
