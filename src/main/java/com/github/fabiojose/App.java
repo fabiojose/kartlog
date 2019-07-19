@@ -41,7 +41,7 @@ public class App {
     	
     	final LogService logService = new LogService();
     	
-    	logService.load(filePathName);
+    	logService.report(logService.rankingOf(filePathName), System.out);
     	
     }
 }
