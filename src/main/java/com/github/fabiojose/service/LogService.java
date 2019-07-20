@@ -37,15 +37,6 @@ public class LogService {
 	
 	private static final int FIRST_LINE = 1;
 	
-	Stream<Log> valuesOf(Path filePath) throws IOException {
-		
-		return 
-			Files.lines(filePath)
-				.skip(FIRST_LINE)
-				.map(LogFactory::fromLogEntry);
-	
-	}
-	
 	Map<Short, List<Log>> logsByVolta(Stream<Log> logs) {
 		
 		Map<Short, List<Log>> result =
@@ -63,7 +54,17 @@ public class LogService {
 		return result;
 	}
 	
-	Path pathOf(String filePathName) throws IOException {
+	String format(Duration duration) {
+		
+		return String.format("%d:%02d:%02d.%03d",
+			duration.toHoursPart(),
+			duration.toMinutesPart(),
+			duration.toSecondsPart(),
+			duration.toMillisPart()
+		);
+	}
+	
+	public Path pathOf(String filePathName) throws IOException {
 		requireNonNull(filePathName);
 		
 		Path filePath = Paths.get(filePathName);
@@ -82,20 +83,20 @@ public class LogService {
 				.orElseThrow(() -> new FileNotFoundException(filePathName));
 	}
 	
-	String format(Duration duration) {
+	public List<Log> valuesOf(Path filePath) throws IOException {
 		
-		return String.format("%d:%02d:%02d.%03d",
-			duration.toHoursPart(),
-			duration.toMinutesPart(),
-			duration.toSecondsPart(),
-			duration.toMillisPart()
-		);
+		return 
+			Files.lines(filePath)
+				.skip(FIRST_LINE)
+				.map(LogFactory::fromLogEntry)
+				.collect(Collectors.toList());
+	
 	}
 	
-	public Stream<Ranking> rankingOf(String filePathName) throws IOException {
-		Path filePath = pathOf(filePathName);
+	public Stream<Ranking> rankingOf(List<Log> logs) throws IOException {
+		requireNonNull(logs);
 				
-    	Stream<Log> values = valuesOf(filePath);
+    	Stream<Log> values = logs.stream();
     	
     	Map<Piloto, List<Log>> logsByPiloto = values
 				.collect(Collectors.groupingBy(Log::getPiloto));

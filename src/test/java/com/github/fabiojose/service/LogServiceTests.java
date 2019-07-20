@@ -7,8 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.FileNotFoundException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Optional;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
@@ -35,7 +35,7 @@ public class LogServiceTests {
 		// assert
 		assertThrows(NullPointerException.class, () -> {
 			// act
-			service.rankingOf(arg);
+			service.pathOf(arg);
 		});
 	}
 	
@@ -60,7 +60,7 @@ public class LogServiceTests {
 		// assert
 		assertThrows(IllegalArgumentException.class, () -> {
 			// act
-			service.rankingOf(arg);
+			service.pathOf(arg);
 		});
 	}
 	
@@ -73,7 +73,7 @@ public class LogServiceTests {
 		// assert
 		assertThrows(FileNotFoundException.class, () -> {
 			// act
-			service.rankingOf(arg);
+			service.pathOf(arg);
 		});
 	}
 	
@@ -84,7 +84,7 @@ public class LogServiceTests {
 		LogService service = new LogService();
 		
 		// act and assert
-		service.rankingOf(arg);
+		service.pathOf(arg);
 	}
 	
 	@Test
@@ -98,6 +98,7 @@ public class LogServiceTests {
 		// act
 		Optional<Log> actual = 
 			service.valuesOf(arg)
+				.stream()
 				.findFirst();
 		
 		// assert
@@ -119,6 +120,7 @@ public class LogServiceTests {
 		// act
 		Optional<Log> actual = 
 			service.valuesOf(arg)
+				.stream()
 				.skip(FIRST_VALUE)
 				.findFirst();
 		
@@ -141,6 +143,7 @@ public class LogServiceTests {
 		// act
 		Optional<Log> actual = 
 			service.valuesOf(arg)
+				.stream()
 				.skip(TO_LAST)
 				.findFirst();
 		
@@ -159,9 +162,10 @@ public class LogServiceTests {
 		String expectedPilotoNome = "R.BARRICHELLO";
 		String arg = "./target/test-classes/input2.txt";
 		LogService service = new LogService();
+		List<Log> logs = service.valuesOf(service.pathOf(arg));
 		
 		// act
-		Stream<Ranking> ranking = service.rankingOf(arg);
+		Stream<Ranking> ranking = service.rankingOf(logs);
 		Optional<Ranking> actual = 
 				ranking.findFirst();
 		
@@ -181,9 +185,10 @@ public class LogServiceTests {
 		String expectedPilotoNome = "F.MASSA";
 		String arg = "./target/test-classes/input.txt";
 		LogService service = new LogService();
+		List<Log> logs = service.valuesOf(service.pathOf(arg));
 		
 		// act
-		Stream<Ranking> ranking = service.rankingOf(arg);
+		Stream<Ranking> ranking = service.rankingOf(logs);
 		
 		Optional<Ranking> actual = 
 				ranking.findFirst();

@@ -1,8 +1,11 @@
 package com.github.fabiojose;
 
+import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
+import com.github.fabiojose.model.Log;
 import com.github.fabiojose.service.LogService;
 
 /**
@@ -41,7 +44,10 @@ public class App {
     	
     	final LogService logService = new LogService();
     	
-    	logService.report(logService.rankingOf(filePathName), System.out);
+    	Path filePath = logService.pathOf(filePathName);
+    	List<Log> logs = logService.valuesOf(filePath);
+    	
+    	logService.report(logService.rankingOf(logs), System.out);
     	
     }
 }
