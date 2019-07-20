@@ -176,26 +176,34 @@ public class LogService {
 
 	}
 	
-	public void bonusOf(Stream<Ranking> rank) throws IOException {
+	public Optional<Log> melhorVoltaOf(List<Ranking> rank) {
 		requireNonNull(rank);
 		
-		Optional<Log> voltaMaisRapida =
-		rank
-			.map(Ranking::getLogs)
-			.flatMap(List::stream)
-			.min((log1, log2) -> 
-				log1.getTempoVolta().compareTo(log2.getTempoVolta()));
-		
-		voltaMaisRapida.ifPresent(l -> {
-			log.info("Melhor volta: {}", l);
-		});
+		return
+			rank
+				.stream()
+				.map(Ranking::getLogs)
+				.flatMap(List::stream)
+				.min((log1, log2) -> 
+					log1.getTempoVolta().compareTo(log2.getTempoVolta()));
 		
 	}
 	
-	public void report(Stream<Ranking> ranking,
+	public void report(Stream<Ranking> ranking, Log melhorVolta,
 			final OutputStream output) throws IOException {
 		requireNonNull(ranking);
+		requireNonNull(melhorVolta);
 		requireNonNull(output);
+		
+		output.write(
+			String.format(
+				"Melhor volta:\n\t%s\n\tVolta %d\n\t%s\n\tVelocidade %f",
+				melhorVolta.getPiloto().getCodigo(),
+				melhorVolta.getVolta(),
+				format(melhorVolta.getTempoVolta()),
+				melhorVolta.getVelocidadeMediaVolta()
+			).getBytes()
+		);
 		
 		// Cabeçalho
 		output.write(String.format(
