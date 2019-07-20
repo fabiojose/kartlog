@@ -8,6 +8,7 @@ import java.io.FileNotFoundException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
@@ -183,6 +184,7 @@ public class LogServiceTests {
 		
 		// act
 		Stream<Ranking> ranking = service.rankingOf(arg);
+		
 		Optional<Ranking> actual = 
 				ranking.findFirst();
 		

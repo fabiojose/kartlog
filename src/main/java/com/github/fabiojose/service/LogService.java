@@ -12,6 +12,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalDouble;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -54,14 +55,15 @@ public class LogService {
 		result.values().stream()
 			.forEach(value -> {
 				value.sort((log1, log2) -> {
-					return log1.getTempoVolta().compareTo(log2.getTempoVolta());
+					return log1.getTempoVolta()
+							.compareTo(log2.getTempoVolta());
 				});
 			});
 		
 		return result;
 	}
 	
-	public Stream<Ranking> rankingOf(String filePathName) throws IOException {
+	Path pathOf(String filePathName) throws IOException {
 		requireNonNull(filePathName);
 		
 		Path filePath = Paths.get(filePathName);
@@ -73,11 +75,25 @@ public class LogService {
 				.orElseThrow(() -> new IllegalArgumentException(
 	    			String.format("Path is not a file: %s", filePathName)));
 
-		filePath = 
+		return
 			Stream.of(filePath)
 				.filter(fp -> fp.toFile().exists())
 				.findFirst()
 				.orElseThrow(() -> new FileNotFoundException(filePathName));
+	}
+	
+	String format(Duration duration) {
+		
+		return String.format("%d:%02d:%02d.%03d",
+			duration.toHoursPart(),
+			duration.toMinutesPart(),
+			duration.toSecondsPart(),
+			duration.toMillisPart()
+		);
+	}
+	
+	public Stream<Ranking> rankingOf(String filePathName) throws IOException {
+		Path filePath = pathOf(filePathName);
 				
     	Stream<Log> values = valuesOf(filePath);
     	
@@ -132,8 +148,47 @@ public class LogService {
 			.map(ranking -> {
 				return Ranking.ofPosicao(ranking, 
 						(short)posicao.incrementAndGet());
+			})
+			// volta mais rápida
+			.map(ranking -> 
+				ranking.getLogs()
+					.stream()
+					.min((log1, log2) -> log1.getTempoVolta()
+							.compareTo(log2.getTempoVolta()))
+					.map(melhorVolta -> {
+						return Ranking
+							.ofMelhorVolta(ranking, melhorVolta);
+					})
+					.get()
+			)
+			// velocidade média
+			.map(ranking -> {
+				OptionalDouble velocidadeMedia =
+					ranking.getLogs()
+						.stream()
+						.mapToDouble(r -> r.getVelocidadeMediaVolta())
+						.average();
+				
+				return Ranking.ofVelocidadeMedia(ranking,
+						(float)velocidadeMedia.getAsDouble());
 			});
 
+	}
+	
+	public void bonusOf(Stream<Ranking> rank) throws IOException {
+		requireNonNull(rank);
+		
+		Optional<Log> voltaMaisRapida =
+		rank
+			.map(Ranking::getLogs)
+			.flatMap(List::stream)
+			.min((log1, log2) -> 
+				log1.getTempoVolta().compareTo(log2.getTempoVolta()));
+		
+		voltaMaisRapida.ifPresent(l -> {
+			log.info("Melhor volta: {}", l);
+		});
+		
 	}
 	
 	public void report(Stream<Ranking> ranking,
@@ -143,29 +198,29 @@ public class LogService {
 		
 		// Cabeçalho
 		output.write(String.format(
-			"|%20s|%-20s|%-20s|%20s|%20s|\n",
-			"Posição Chegada",
+			"|%10s|%-15s|%-20s|%20s|%-16s|%-4s%12s|%12s|\n",
+			"Posição",
 			"Código Piloto",
 			"Nome Piloto",
 			"Voltas Completadas",
-			"Tempo de Prova"
+			"Tempo de Prova",
+			"#",
+			"Melhor Volta",
+			"Vel. Média"
 		).getBytes());
 		
 		ranking.forEach(r -> {
 			try { 
 				output.write(String.format(
-					"|%20d|%-20s|%-20s|%20d|%20s|\n",
+					"|%10d|%-15s|%-20s|%20d|%-16s|%-4d%12s|%12f|\n",
 					r.getPosicao(),
 					r.getPiloto().getCodigo(),
 					r.getPiloto().getNome(),
 					r.getVoltasCompletadas(),
-					
-					String.format("%d:%02d:%02d.%03d",
-						r.getTempoTotalProva().toHoursPart(),
-						r.getTempoTotalProva().toMinutesPart(),
-						r.getTempoTotalProva().toSecondsPart(),
-						r.getTempoTotalProva().toMillisPart()
-					)
+					format(r.getTempoTotalProva()),
+					r.getMelhorVolta().getVolta(),
+					format(r.getMelhorVolta().getTempoVolta()),
+					r.getVelocidadeMedia()
 				).getBytes());
 			}catch(IOException e) {
 				log.error(e.getMessage(), e);

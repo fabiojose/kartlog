@@ -17,6 +17,8 @@ public class Ranking {
 	
 	private List<Log> logs;
 	private Log ultimaVolta;
+	private Log melhorVolta;
+	private float velocidadeMedia;
 	
 	public Ranking(short posicao, Piloto piloto, short voltasCompletadas,
 			Duration tempoTotalProva, List<Log> logs) {
@@ -37,6 +39,31 @@ public class Ranking {
 		this.ultimaVolta = ultimaVolta;
 	}
 	
+	private Ranking(short posicao, Piloto piloto, short voltasCompletadas,
+			Duration tempoTotalProva, List<Log> logs, Log ultimaVolta,
+			Log melhorVolta) {
+		this.posicao = posicao;
+		this.piloto = piloto;
+		this.voltasCompletadas = voltasCompletadas;
+		this.tempoTotalProva = tempoTotalProva;
+		this.logs = logs;
+		this.ultimaVolta = ultimaVolta;
+		this.melhorVolta = melhorVolta;
+	}
+	
+	private Ranking(short posicao, Piloto piloto, short voltasCompletadas,
+			Duration tempoTotalProva, List<Log> logs, Log ultimaVolta,
+			Log melhorVolta, float velocidadeMedia) {
+		this.posicao = posicao;
+		this.piloto = piloto;
+		this.voltasCompletadas = voltasCompletadas;
+		this.tempoTotalProva = tempoTotalProva;
+		this.logs = logs;
+		this.ultimaVolta = ultimaVolta;
+		this.melhorVolta = melhorVolta;
+		this.velocidadeMedia = velocidadeMedia;
+	}
+	
 	public short getPosicao() {
 		return posicao;
 	}
@@ -54,6 +81,12 @@ public class Ranking {
 	}
 	public Log getUltimaVolta() {
 		return ultimaVolta;
+	}
+	public Log getMelhorVolta() {
+		return melhorVolta;
+	}
+	public float getVelocidadeMedia() {
+		return velocidadeMedia;
 	}
 
 	@Override
@@ -76,5 +109,24 @@ public class Ranking {
 				base.getVoltasCompletadas(),
 				base.getTempoTotalProva(), base.getLogs(),
 				base.getUltimaVolta());
+	}
+	
+	public static Ranking ofMelhorVolta(Ranking base, Log melhorVolta) {
+		
+		return new Ranking(base.getPosicao(), base.getPiloto(),
+				base.getVoltasCompletadas(),
+				base.getTempoTotalProva(), base.getLogs(),
+				base.getUltimaVolta(),
+				melhorVolta);
+	}
+	
+	public static Ranking ofVelocidadeMedia(Ranking base, float velocidadeMedia) {
+		
+		return new Ranking(base.getPosicao(), base.getPiloto(),
+				base.getVoltasCompletadas(),
+				base.getTempoTotalProva(), base.getLogs(),
+				base.getUltimaVolta(),
+				base.getMelhorVolta(),
+				velocidadeMedia);
 	}
 }
