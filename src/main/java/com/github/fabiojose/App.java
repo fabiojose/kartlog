@@ -28,7 +28,7 @@ public class App {
     		.findFirst()
     		.orElseThrow(() ->
     			new IllegalArgumentException(
-    				String.format("Argument %s not found", FILE_PATH_ARG)));
+    				String.format("Argument '%s' not found", FILE_PATH_ARG)));
     	
     	Optional<String> filePathOptional = 
 	    	Optional.ofNullable(
@@ -40,7 +40,7 @@ public class App {
     	String filePathName =
     	filePathOptional.orElseThrow(() -> 
     		new IllegalArgumentException(
-    			String.format("Argument %s has no value", FILE_PATH_ARG)));
+    			String.format("Argument '%s' has no value", FILE_PATH_ARG)));
     	
     	final LogService logService = new LogService();
     	
