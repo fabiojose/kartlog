@@ -46,8 +46,10 @@ public class App {
     	
     	Path filePath = logService.pathOf(filePathName);
     	List<Log> logs = logService.valuesOf(filePath);
+    	Optional<Log> melhorVolta = logService.melhorVoltaOf(logs);
     	
-    	logService.report(logService.rankingOf(logs), System.out);
+    	logService.report(logService.rankingOf(logs), melhorVolta.get(),
+    			System.out);
     	
     }
 }

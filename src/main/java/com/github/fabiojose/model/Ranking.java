@@ -19,6 +19,7 @@ public class Ranking {
 	private Log ultimaVolta;
 	private Log melhorVolta;
 	private float velocidadeMedia;
+	private Duration atraso;
 	
 	public Ranking(short posicao, Piloto piloto, short voltasCompletadas,
 			Duration tempoTotalProva, List<Log> logs) {
@@ -64,6 +65,16 @@ public class Ranking {
 		this.velocidadeMedia = velocidadeMedia;
 	}
 	
+	private Ranking(short posicao, Piloto piloto, short voltasCompletadas,
+			Duration tempoTotalProva, List<Log> logs, Log ultimaVolta,
+			Log melhorVolta, float velocidadeMedia, Duration atraso) {
+		
+		this(posicao, piloto, voltasCompletadas, tempoTotalProva, 
+				logs, ultimaVolta, melhorVolta, velocidadeMedia);
+		
+		this.atraso = atraso;
+	}
+	
 	public short getPosicao() {
 		return posicao;
 	}
@@ -87,6 +98,9 @@ public class Ranking {
 	}
 	public float getVelocidadeMedia() {
 		return velocidadeMedia;
+	}
+	public Duration getAtraso() { 
+		return atraso;
 	}
 
 	@Override
@@ -128,5 +142,13 @@ public class Ranking {
 				base.getUltimaVolta(),
 				base.getMelhorVolta(),
 				velocidadeMedia);
+	}
+	
+	public static Ranking ofAtraso(Ranking base, Duration atraso) {
+		return new Ranking(base.getPosicao(), base.getPiloto(), 
+				base.getVoltasCompletadas(),
+				base.getTempoTotalProva(), base.getLogs(),
+				base.getUltimaVolta(), base.getMelhorVolta(),
+				base.getVelocidadeMedia(), atraso);
 	}
 }

@@ -9,11 +9,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
+import static java.time.temporal.ChronoUnit.MILLIS;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalDouble;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicStampedReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -36,6 +38,7 @@ public class LogService {
 			LoggerFactory.getLogger(LogService.class);
 	
 	private static final int FIRST_LINE = 1;
+	private static final int PRIMEIRA_POSICAO = 1;
 	
 	Map<Short, List<Log>> logsByVolta(Stream<Log> logs) {
 		
@@ -119,6 +122,9 @@ public class LogService {
 			})
 			.collect(Collectors.toList());
 
+		final AtomicStampedReference<Log> primeiraPosicao = 
+				new AtomicStampedReference<Log>(null, PRIMEIRA_POSICAO);
+		
 		final AtomicInteger posicao = new AtomicInteger(0);
 		return rank.stream()
 			// voltas completadas
@@ -172,18 +178,30 @@ public class LogService {
 				
 				return Ranking.ofVelocidadeMedia(ranking,
 						(float)velocidadeMedia.getAsDouble());
+			})
+			.peek(ranking -> {
+				if(PRIMEIRA_POSICAO == ranking.getPosicao()) {
+					primeiraPosicao.set(ranking.getUltimaVolta(),
+						PRIMEIRA_POSICAO);
+				}
+			})
+			.map(ranking -> {
+				Duration atraso = Duration.ofMillis(
+					MILLIS.between(primeiraPosicao.getReference().getHora(),
+							ranking.getUltimaVolta().getHora())
+				);
+				
+				return Ranking.ofAtraso(ranking, atraso);
 			});
 
 	}
 	
-	public Optional<Log> melhorVoltaOf(List<Ranking> rank) {
+	public Optional<Log> melhorVoltaOf(List<Log> rank) {
 		requireNonNull(rank);
 		
 		return
 			rank
 				.stream()
-				.map(Ranking::getLogs)
-				.flatMap(List::stream)
 				.min((log1, log2) -> 
 					log1.getTempoVolta().compareTo(log2.getTempoVolta()));
 		
@@ -197,8 +215,9 @@ public class LogService {
 		
 		output.write(
 			String.format(
-				"Melhor volta:\n\t%s\n\tVolta %d\n\t%s\n\tVelocidade %f",
+				"Melhor volta:\n\t%s - %s\n\tVolta %d\n\tTempo %s\n\tVelocidade %f\n\n",
 				melhorVolta.getPiloto().getCodigo(),
+				melhorVolta.getPiloto().getNome(),
 				melhorVolta.getVolta(),
 				format(melhorVolta.getTempoVolta()),
 				melhorVolta.getVelocidadeMediaVolta()
@@ -207,21 +226,22 @@ public class LogService {
 		
 		// Cabeçalho
 		output.write(String.format(
-			"|%10s|%-15s|%-20s|%20s|%-16s|%-4s%12s|%12s|\n",
+			"|%8s|%-15s|%-20s|%12s|%-16s|%-4s%12s|%12s|%12s|\n",
 			"Posição",
 			"Código Piloto",
 			"Nome Piloto",
-			"Voltas Completadas",
+			"Completadas",
 			"Tempo de Prova",
 			"#",
 			"Melhor Volta",
-			"Vel. Média"
+			"Vel. Média",
+			"Após"
 		).getBytes());
 		
 		ranking.forEach(r -> {
 			try { 
 				output.write(String.format(
-					"|%10d|%-15s|%-20s|%20d|%-16s|%-4d%12s|%12f|\n",
+					"|%8d|%-15s|%-20s|%12d|%-16s|%-4d%12s|%12f|%12s|\n",
 					r.getPosicao(),
 					r.getPiloto().getCodigo(),
 					r.getPiloto().getNome(),
@@ -229,7 +249,8 @@ public class LogService {
 					format(r.getTempoTotalProva()),
 					r.getMelhorVolta().getVolta(),
 					format(r.getMelhorVolta().getTempoVolta()),
-					r.getVelocidadeMedia()
+					r.getVelocidadeMedia(),
+					format(r.getAtraso())
 				).getBytes());
 			}catch(IOException e) {
 				log.error(e.getMessage(), e);

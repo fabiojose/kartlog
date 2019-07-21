@@ -43,11 +43,11 @@ public class LogServiceTests {
 	public void output_is_null_err() {
 		// setup
 		LogService service = new LogService();
-		
+		Log log = new Log(null, null, (short)0, null, 0.0f);
 		// assert
 		assertThrows(NullPointerException.class, () -> {
 			// act
-			service.report(Stream.ofNullable(null), null);
+			service.report(Stream.ofNullable(null), log, null);
 		});
 	}
 
