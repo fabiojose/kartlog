@@ -17,7 +17,7 @@ import java.util.Optional;
 import java.util.OptionalDouble;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicStampedReference;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -26,7 +26,6 @@ import org.slf4j.LoggerFactory;
 
 import com.github.fabiojose.model.Log;
 import com.github.fabiojose.model.LogFactory;
-import com.github.fabiojose.model.Piloto;
 import com.github.fabiojose.model.Ranking;
 
 /**
@@ -40,7 +39,6 @@ public class LogService {
 			LoggerFactory.getLogger(LogService.class);
 	
 	private static final int FIRST_LINE = 1;
-	private static final int HORA_BASE = 0;
 	
 	Map<Short, List<Log>> logsByVolta(Stream<Log> logs) {
 		
@@ -97,20 +95,26 @@ public class LogService {
 				.collect(Collectors.toList());
 	
 	}
-	
+
 	public Stream<Ranking> rankingOf(List<Log> logs) throws IOException {
 		requireNonNull(logs);
-				
-    	Stream<Log> values = logs.stream();
-    	
-    	Map<Piloto, List<Log>> logsByPiloto = values
-				.collect(Collectors.groupingBy(Log::getPiloto));
 		
-		List<Ranking> rank = logsByPiloto.entrySet()
+		final AtomicReference<LocalTime> horaBaseAtraso = 
+			new AtomicReference<>(LocalTime.of(0, 0, 0));
+		
+		final AtomicLong atrasoAcumuladoMillis = new AtomicLong(0);
+		final AtomicInteger posicao = new AtomicInteger(0);
+		
+		return
+		logs
 			.stream()
+			// Logs por piloto
+			.collect(Collectors.groupingBy(Log::getPiloto))
+			.entrySet()
+			.stream()
+			// Ranking para cada piloto com Logs
 			.map(entry -> {
-				// tempo total de prova
-				Optional<Duration> tempoTotal = 
+				Optional<Duration> tempoTotalProva = 
 					entry.getValue()
 						.stream()
 						.map(Log::getTempoVolta)
@@ -120,17 +124,8 @@ public class LogService {
 				
 				return 
 					new Ranking((short)0, entry.getKey(), (short)0,
-							tempoTotal.get(), entry.getValue());
+							tempoTotalProva.get(), entry.getValue());
 			})
-			.collect(Collectors.toList());
-		
-		final AtomicStampedReference<LocalTime> horaBaseAtraso = 
-			new AtomicStampedReference<>(LocalTime.of(0, 0, 0), HORA_BASE);
-		
-		final AtomicLong atrasoAcumuladoMillis = new AtomicLong(0);
-		
-		final AtomicInteger posicao = new AtomicInteger(0);
-		return rank.stream()
 			// voltas completadas
 			.map(ranking -> {
 				Optional<Log> ultimaVolta = ranking.getLogs()
@@ -186,7 +181,7 @@ public class LogService {
 			// Tempo de chegada após o vencedor
 			.map(ranking -> {
 				
-				LocalTime horaBase = horaBaseAtraso.getReference();
+				LocalTime horaBase = horaBaseAtraso.get();
 				
 				long diferenca =
 					MILLIS.between(horaBase,
@@ -203,7 +198,7 @@ public class LogService {
 							return oldValue + newValue;
 					});
 				
-				horaBaseAtraso.set(ranking.getUltimaVolta().getHora(), HORA_BASE);
+				horaBaseAtraso.set(ranking.getUltimaVolta().getHora());
 				
 				Duration atrasoPiloto = Duration.ofMillis(atrasoAbsoluto);
 				
