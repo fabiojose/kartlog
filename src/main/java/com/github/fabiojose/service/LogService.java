@@ -1,5 +1,6 @@
 package com.github.fabiojose.service;
 
+import static java.time.temporal.ChronoUnit.MILLIS;
 import static java.util.Objects.requireNonNull;
 
 import java.io.FileNotFoundException;
@@ -9,12 +10,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
-import static java.time.temporal.ChronoUnit.MILLIS;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalDouble;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicStampedReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -38,7 +40,7 @@ public class LogService {
 			LoggerFactory.getLogger(LogService.class);
 	
 	private static final int FIRST_LINE = 1;
-	private static final int PRIMEIRA_POSICAO = 1;
+	private static final int HORA_BASE = 0;
 	
 	Map<Short, List<Log>> logsByVolta(Stream<Log> logs) {
 		
@@ -121,9 +123,11 @@ public class LogService {
 							tempoTotal.get(), entry.getValue());
 			})
 			.collect(Collectors.toList());
-
-		final AtomicStampedReference<Log> primeiraPosicao = 
-				new AtomicStampedReference<Log>(null, PRIMEIRA_POSICAO);
+		
+		final AtomicStampedReference<LocalTime> horaBaseAtraso = 
+			new AtomicStampedReference<>(LocalTime.of(0, 0, 0), HORA_BASE);
+		
+		final AtomicLong atrasoAcumuladoMillis = new AtomicLong(0);
 		
 		final AtomicInteger posicao = new AtomicInteger(0);
 		return rank.stream()
@@ -179,19 +183,31 @@ public class LogService {
 				return Ranking.ofVelocidadeMedia(ranking,
 						(float)velocidadeMedia.getAsDouble());
 			})
-			.peek(ranking -> {
-				if(PRIMEIRA_POSICAO == ranking.getPosicao()) {
-					primeiraPosicao.set(ranking.getUltimaVolta(),
-						PRIMEIRA_POSICAO);
-				}
-			})
+			// Tempo de chegada após o vencedor
 			.map(ranking -> {
-				Duration atraso = Duration.ofMillis(
-					MILLIS.between(primeiraPosicao.getReference().getHora(),
-							ranking.getUltimaVolta().getHora())
-				);
 				
-				return Ranking.ofAtraso(ranking, atraso);
+				LocalTime horaBase = horaBaseAtraso.getReference();
+				
+				long diferenca =
+					MILLIS.between(horaBase,
+						ranking.getUltimaVolta().getHora());
+				
+				long aoQuadrado = (long)Math.pow(
+						MILLIS.between(LocalTime.MIDNIGHT, horaBase), 2);
+
+				long atrasoRelativo = Math.min(diferenca, aoQuadrado);
+				
+				long atrasoAbsoluto =
+					atrasoAcumuladoMillis.accumulateAndGet(atrasoRelativo,
+						(oldValue, newValue) -> {
+							return oldValue + newValue;
+					});
+				
+				horaBaseAtraso.set(ranking.getUltimaVolta().getHora(), HORA_BASE);
+				
+				Duration atrasoPiloto = Duration.ofMillis(atrasoAbsoluto);
+				
+				return Ranking.ofAtraso(ranking, atrasoPiloto);
 			});
 
 	}
@@ -235,7 +251,7 @@ public class LogService {
 			"#",
 			"Melhor Volta",
 			"Vel. Média",
-			"Após"
+			"Atraso"
 		).getBytes());
 		
 		ranking.forEach(r -> {
