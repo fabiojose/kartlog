@@ -19,7 +19,7 @@
 
     <slf4j.version>1.7.26</slf4j.version>
     <logback-classic.version>1.0.13</logback-classic.version>
-    <groovy.version>2.5.4</groovy.version>
+    <groovy.version>2.5.14</groovy.version>
 
     <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
     <jacoco-maven-plugin.version>0.8.3</jacoco-maven-plugin.version>
